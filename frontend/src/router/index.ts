@@ -6,6 +6,7 @@ const Session = () => import('@/views/session/index.vue')
 const Heatmap = () => import('@/views/heatmap/index.vue')
 const Feature = () => import('@/views/feature/index.vue')
 const Action = () => import('@/views/action/index.vue')
+const LabelRecompute = () => import('@/views/labelrecompute/index.vue')
 const Pathmap = () => import('@/views/pathmap/index.vue')
 const Eventtrace = () => import('@/views/eventtrace/index.vue')
 const Timewindow = () => import('@/views/timewindow/index.vue')
@@ -29,6 +30,7 @@ const router = createRouter({
     { path: '/heatmap', name: 'heatmap', component: Heatmap },
     { path: '/feature', name: 'feature', component: Feature },
     { path: '/action', name: 'action', component: Action },
+    { path: '/label-recompute', name: 'label-recompute', component: LabelRecompute },
     { path: '/pathmap', name: 'pathmap', component: Pathmap },
     { path: '/eventtrace', name: 'eventtrace', component: Eventtrace },
     { path: '/timewindow', name: 'timewindow', component: Timewindow },

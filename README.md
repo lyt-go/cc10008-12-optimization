@@ -15,11 +15,40 @@
 │   ├── src/views/            每个业务模块一个页面
 │   ├── src/api/local-service.ts   本地数据服务：列表、筛选、动作流转、导出
 │   ├── src/data/             模块元数据 / 示例数据 / localStorage 持久化
+│   ├── src/domain/label-recompute/  行为特征标签增量重算引擎（纯内核 + 适配 + 服务）
 │   ├── src/stores/           会话与筛选状态
 │   └── vite.config.ts        dev server 配置（open: false，无 /api 代理）
 ├── .gitignore
 └── docker-compose.yml
 ```
+
+## 行为特征标签增量重算
+
+入口在侧边栏「增量重算」（路由 `/label-recompute`），围绕**行为特征标签版本**组织，
+代码集中在 `frontend/src/domain/label-recompute/`：
+
+- `engine.ts`：不依赖 DOM 的纯引擎内核，承载全部不变量；
+- `adapters.ts`：把既有清单（特征工程 `feature` / 行动标签 `action` 的 `EntryRow`）
+  投影成引擎领域对象，「时间窗口天」即窗口标识，行动标签的「触发事件组」引用特征模板
+  的「输出字段名」，构成 action → feature 调用链；
+- `service.ts`：引擎装配与独立 localStorage 持久化（键
+  `behavior-event-trace-hub:label-recompute`），清单改动后可按当前清单重建；
+- `*.test.ts`：不变量与端到端测试，运行 `npm run test:domain`（基于内置
+  `node --test` 与 esbuild，不新增依赖）。
+
+引擎保证的语义：
+
+1. **只重算受影响部分**：窗口重算只扫描绑定该窗口的已发布特征模板与受影响标签规则；
+   未受影响模板沿用上一完整行为特征向量（`inherited` + 来源窗口版本可审计），不整批重扫。
+2. **幂等复用**：同一窗口版本的相同请求第二次提交直接复用已完成命中（`dedup-reused`），
+   零扫描、不新增覆盖率快照。
+3. **冲突只保留一个结果**：异请求撞同一窗口版本按冲突驳回（`conflict-rejected`），
+   每个窗口版本至多一个有效增量命中结果批次。
+4. **两种仲裁**：旧窗口重算与迟到更正落在同一标签规则时，可选「受影响窗口增量」
+   （产出局部窗口刷新清单）或「业务周期整体重算」（产出周期级替换命中清单）。
+5. **覆盖率稳定边界**：覆盖率按批次整批替换，分母（生效规则-窗口对）恒定、绝不累计。
+6. **单窗口版本引用**：每条标签命中只引用一个窗口版本；只改一个窗口时，未引用该窗口的
+   规则、命中与复核项保持原版本。复核清单随增量结果增量更新。
 
 ## 启动
 
